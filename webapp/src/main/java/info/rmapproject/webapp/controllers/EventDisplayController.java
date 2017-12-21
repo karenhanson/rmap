@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,10 +50,13 @@ public class EventDisplayController {
 
 	/** The log. */
 	private static final Logger LOG = LoggerFactory.getLogger(EventDisplayController.class);
-
+	
+	private String apiPath;
+	
 	@Autowired
-	public EventDisplayController(DataDisplayService dataDisplayService) {
+	public EventDisplayController(DataDisplayService dataDisplayService, @Value("${rmapapi.path}") String apiPath) {
 		this.dataDisplayService = dataDisplayService;
+		this.apiPath = apiPath;
 	}
 	
 	/**
@@ -72,6 +76,25 @@ public class EventDisplayController {
 		
 		return "events";
 	}	
+	
+	/**
+	 * Gets details of Event by redirecting to API - this happens when request RDF format from web GUI path.
+	 *
+	 * @param eventUri the Event URI
+	 * @return the redirect to the Event API page
+	 * @throws Exception the exception
+	 */
+	@RequestMapping(value="/events/{uri}", method = RequestMethod.GET, 
+					produces={"application/rdf+xml", "application/vnd.rmap-project.event+rdf+xml",
+							"application/ld+json", "application/vnd.rmap-project.event+ld+json","application/n-quads",
+							"application/vnd.rmap-project.event+n-quads","text/turtle", "application/vnd.rmap-project.event+turtle"})	
+	public String discoApiRedirect(@PathVariable(value="uri") String eventUri, Model model) throws Exception {
+		if (apiPath==null || apiPath.length()==0){
+			return event(eventUri,model); 
+		}
+		return "redirect:" + apiPath +  "/events/" + eventUri;
+	}		
+	
 
 
 	/**

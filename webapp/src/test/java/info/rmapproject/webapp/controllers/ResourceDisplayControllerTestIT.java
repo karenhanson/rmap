@@ -26,11 +26,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import java.net.URI;
+import java.net.URLEncoder;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -44,6 +48,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import info.rmapproject.core.model.impl.rdf4j.ORMapDiSCO;
 import info.rmapproject.core.model.request.RMapSearchParamsFactory;
+import com.google.common.net.MediaType;
 import info.rmapproject.testdata.service.TestFile;
 import info.rmapproject.webapp.TestUtils;
 import info.rmapproject.webapp.WebDataRetrievalTestAbstractIT;
@@ -82,7 +87,7 @@ public class ResourceDisplayControllerTestIT extends WebDataRetrievalTestAbstrac
         mockMvc = MockMvcBuilders.standaloneSetup(resourceDisplayController)
         			.setViewResolvers(TestUtils.getViewResolver()).build();
     }
-    
+	
     /**
      * Check invalid resource page should still return resources page, page display should handle empty
      * Note: due to a glitch with encoding/decoding path variables in mockmvc, cannot depend on auto-decoding
@@ -119,9 +124,31 @@ public class ResourceDisplayControllerTestIT extends WebDataRetrievalTestAbstrac
 		String discoUri = disco.getId().toString();
         assertNotNull(discoUri);
 		rmapService.createDiSCO(disco, reqEventDetails);
-        mockMvc.perform(get("/resources?uri={uri}","ark:/27927/12121212"))
-        	.andExpect(view().name("redirect:/resources/ark%3A%2F27927%2F12121212"));     
-        
+    mockMvc.perform(get("/resources?uri={uri}","ark:/27927/12121212"))
+      .andExpect(view().name("redirect:/resources/ark%3A%2F27927%2F12121212"));     
     }
+    
+	/**
+     * Try Resource redirect to API when RDF type requested.
+     * @throws Exception
+     */
+    @Test
+    @Ignore
+    public void testResourceContentNegotiation() throws Exception {
+		ORMapDiSCO disco = getRMapDiSCOObj(TestFile.DISCOB_V1_XML);
+		String discoUri = disco.getId().toString();
+        assertNotNull(discoUri);
+		rmapService.createDiSCO(disco, reqEventDetails);
+		discoUri = URLEncoder.encode(discoUri, "UTF-8");
+		
+        mockMvc.perform(get("/resources/ark%3A%2F27927%2F12121212").accept(MediaType.RDF_XML_UTF_8.toString()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("https://fake.rmap-hub.org/fake/resources/ark%3A%2F27927%2F12121212"));
+
+        mockMvc.perform(get("/resources/" + discoUri).accept("text/turtle"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl("https://fake.rmap-hub.org/fake/resources/" + discoUri));
+    }
+    
     
 }

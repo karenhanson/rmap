@@ -25,6 +25,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,12 +60,16 @@ public class DiSCODataController {
 	/**  term for standard view, used in VIEWMODE. */
 	private static final String STANDARD_VIEW = "standard";
 	
+	private String apiPath;
 
 	@Autowired
-	public DiSCODataController(DataDisplayService dataDisplayService) {
+	public DiSCODataController(DataDisplayService dataDisplayService, @Value("${rmapapi.path}") String apiPath) {
 		this.dataDisplayService = dataDisplayService;
+		this.apiPath = apiPath;
 	}
 	
+	
+		
 	/**
 	 * GET details of a DiSCO.
 	 *
@@ -84,7 +89,25 @@ public class DiSCODataController {
 	    model.addAttribute("PAGEPATH", "discos");
 
 		return "discos";
-	}	
+	}
+	
+	/**
+	 * Gets details of DiSCO by redirecting to API - this happens when request RDF format from web GUI path.
+	 *
+	 * @param discoUri the DiSCO uri	 
+	 * @return the redirect to the DiSCO API page
+	 * @throws Exception the exception
+	 */
+	@RequestMapping(value="/discos/{uri}", method = RequestMethod.GET, 
+					produces={"application/rdf+xml","application/vnd.rmap-project.disco+rdf+xml",
+							"application/ld+json", "application/vnd.rmap-project.disco+ld+json","application/n-quads",
+							"application/vnd.rmap-project.disco+n-quads","text/turtle", "application/vnd.rmap-project.disco+turtle"})	
+	public String discoApiRedirect(@PathVariable(value="uri") String discoUri, Model model) throws Exception {
+		if (apiPath==null || apiPath.length()==0){
+			return disco(discoUri,model);
+		}
+		return "redirect:" + apiPath +  "/discos/" + discoUri;
+	}		
 	
 	/**
 	 * Some platforms (e.g. PowerPoint) do not like that we have encoded URIs embedded as a REST parameter. This is a back door to 

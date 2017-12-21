@@ -24,9 +24,12 @@ import java.net.URLEncoder;
 import java.util.List;
 
 import org.jsoup.Jsoup;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,7 +64,10 @@ public class ResourceDisplayController {
 
 	/** The log. */
 	private static final Logger LOG = LoggerFactory.getLogger(ResourceDisplayController.class);
-	
+
+	@Value("${rmapapi.path}")
+	private String apiPath;
+			
 	/**  term for standard view, used in VIEWMODE. */
 	private static final String STANDARD_VIEW = "standard";
 	
@@ -91,7 +97,7 @@ public class ResourceDisplayController {
 	 * @return the resources page or redirect back to search on error
 	 * @throws Exception the exception
 	 */
-	@RequestMapping(value="/resources/{uri}", method = RequestMethod.GET)
+	@RequestMapping(value="/resources/{uri}", method = RequestMethod.GET)	
 	public String resource(@PathVariable(value="uri") String sResourceUri, 
 				@RequestParam(value="resview", required=false) Integer resview, 
 				@RequestParam(value="status", required=false) String status,
@@ -125,6 +131,24 @@ public class ResourceDisplayController {
 		return "resources";
 	}
 	
+	/**
+	 * Gets details of a Resource by redirecting to API - this happens when request RDF format from web GUI path.
+	 *
+	 * @param resourceUri the Resource URI
+	 * @return the redirect to the Resource API page
+	 * @throws Exception the exception
+	 */
+	@RequestMapping(value="/resources/{uri}", method = RequestMethod.GET, 
+					produces={"application/rdf+xml","application/ld+json","application/n-quads","text/turtle"})	
+	public String resourceApiRedirect(HttpServletResponse httpServletResponse, @PathVariable(value="uri") String resourceUri, 
+			@RequestParam(value="resview", required=false) Integer resview, 
+			Model model, RedirectAttributes redirectAttributes) throws Exception {
+		if (apiPath==null || apiPath.length()==0){
+			return resource(resourceUri, resview, model, redirectAttributes);
+		}
+
+		return "redirect:" + apiPath +  "/resources/" + resourceUri;
+	}	
 	
 	/**
 	 * Some platforms (e.g. PowerPoint) do not like that we have encoded URIs embedded as a REST parameter. This is a back door to 

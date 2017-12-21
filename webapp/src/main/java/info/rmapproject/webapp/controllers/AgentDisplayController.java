@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,13 +64,17 @@ public class AgentDisplayController {
 	/**used to get instances of RMapSearchParams which passes search properties to rmap**/
 	private RMapSearchParamsFactory paramsFactory;
 	
+	/**api path for content negotation*/
+	private String apiPath;
+			
 	/**  term for standard view, used in VIEWMODE. */
 	private static final String STANDARD_VIEW = "standard";
 
 	@Autowired
-	public AgentDisplayController(DataDisplayService dataDisplayService, RMapSearchParamsFactory paramsFactory) {
+	public AgentDisplayController(DataDisplayService dataDisplayService, RMapSearchParamsFactory paramsFactory, @Value("${rmapapi.path}") String apiPath) {
 		this.dataDisplayService = dataDisplayService;
 		this.paramsFactory = paramsFactory;
+		this.apiPath = apiPath;
 	}
 	
 	/**
@@ -80,7 +85,7 @@ public class AgentDisplayController {
 	 * @return the agents page
 	 * @throws Exception the exception
 	 */
-	@RequestMapping(value="/agents/{uri}", method = RequestMethod.GET)
+	@RequestMapping(value="/agents/{uri}", method = RequestMethod.GET)	
 	public String agent(@PathVariable(value="uri") String agentUri, Model model) throws Exception {
 		LOG.info("Agent requested: {}", agentUri);	
 		AgentDTO agentDTO = dataDisplayService.getAgentDTO(agentUri);
@@ -90,6 +95,23 @@ public class AgentDisplayController {
 		return "agents";
 	}	
 	
+	/**
+	 * Gets details of Agent by redirecting to API - this happens when request RDF format from web GUI path.
+	 *
+	 * @param agentUri the Agent URI
+	 * @return the redirect to the Agent API page
+	 * @throws Exception the exception
+	 */
+	@RequestMapping(value="/agents/{uri}", method = RequestMethod.GET, 
+					produces={"application/rdf+xml", "application/vnd.rmap-project.agent+rdf+xml",
+							"application/ld+json", "application/vnd.rmap-project.agent+ld+json","application/n-quads", 
+							"application/vnd.rmap-project.agent+n-quads","text/turtle", "application/vnd.rmap-project.agent+turtle"})	
+	public String discoApiRedirect(@PathVariable(value="uri") String agentUri, Model model) throws Exception {
+		if (apiPath==null || apiPath.length()==0){
+			return agent(agentUri,model);
+		}
+		return "redirect:" + apiPath +  "/agents/" + agentUri;
+	}		
 
 	/**
 	 * Some platforms (e.g. PowerPoint) do not like that we have encoded URIs embedded as a REST parameter. This is a back door to 
