@@ -193,7 +193,7 @@ var updateUrlParameter = function (key, value) {
         }
     }
     if (urlQueryString || !valueIsEmpty){
-    	window.history.replaceState({}, "", baseUrl + params);
+    	window.history.pushState({}, "", baseUrl + params);
     }
 };
 
@@ -314,5 +314,44 @@ $(window).load(function() {
 	});			
 });
 
+function getParameterByName(name, defaultVal) {
+    var url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results || !results[2]) return defaultVal;
+    return results[2];
+}
+
+/**
+ * Because we use pushState, need to reload data on back or forward button push.
+ */
+$(window).bind("popstate", function() {	
+    var url = window.location.href;
+    var isResourcePath = (url.indexOf("/resources/")>0);
+    var isDiscoPath = (url.indexOf("/discos/")>0); 
+    var isAgentPath = (url.indexOf("/agents/")>0); 
+    var isPopPath = (isResourcePath||isDiscoPath||isAgentPath);    
+	if (isPopPath) {
+		var tab = getParameterByName("tab","graph");
+		openView(tab);	
+		// if the graphview block is present, load the graph data
+		if (tab=="table"){
+			var offset = getParameterByName("tt_offset",0);
+			loadRecordBatch(offset, status, "tabledata", "tableview", "tt_offset");		
+		} else {
+			var offset = getParameterByName("gt_offset",0);
+			loadGraphBatch(offset, status, "graphdata", "graphview", "gt_offset");
+		}
+		if (isResourcePath) {
+			var offset = getParameterByName("rd_offset",0);
+			loadRecordBatch(offset, status, "discos", "resourceRelatedDiscos", "rd_offset");
+		}
+		if (isAgentPath) {
+			var offset = getParameterByName("ad_offset",0);
+			loadRecordBatch(offset, status, "discos", "agentdiscos", "ad_offset");
+		}
+	}
+});
 
 </script>
