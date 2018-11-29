@@ -51,18 +51,18 @@
         <jsp-api.version>2.1</jsp-api.version>
         <servlet-api.version>3.1.0</servlet-api.version>
         <jsoup.version>1.8.3</jsoup.version>
-        <hibernate.version>5.2.10.Final</hibernate.version>
-        <hibernate-validator.version>5.2.5.Final</hibernate-validator.version>
-        <mysql-connector.version>5.1.6</mysql-connector.version>
-        <postgres-jdbc.version>42.2.1.jre7</postgres-jdbc.version>
         <mockito.version>2.11.0</mockito.version>
+        <hibernate.version>5.3.7.Final</hibernate.version>
+        <hibernate-validator.version>6.0.13.Final</hibernate-validator.version>
+        <mysql-connector.version>5.1.47</mysql-connector.version>
+        <postgres-jdbc.version>42.2.5</postgres-jdbc.version>
         <scribejava.version>2.1.0</scribejava.version>
         <org-json.version>20151123</org-json.version>
         <apache-cxf.version>3.1.4</apache-cxf.version>
-        <derby.version>10.13.1.1</derby.version>
         <build-helper.plugin.version>3.0.0</build-helper.plugin.version>
         <okhttp.version>3.8.0</okhttp.version>
         <ant.version>1.10.1</ant.version>
+        <derby.version>10.14.2.0</derby.version>
         <solr.version>7.4.0</solr.version>
         <spring-data-solr.version>4.0.3.RELEASE</spring-data-solr.version>
         <spring-kafka.version>2.1.4.RELEASE</spring-kafka.version>
