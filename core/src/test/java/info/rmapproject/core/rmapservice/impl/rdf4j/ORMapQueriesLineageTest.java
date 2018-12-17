@@ -22,10 +22,6 @@ package info.rmapproject.core.rmapservice.impl.rdf4j;
 
 import static info.rmapproject.core.model.event.RMapEventTargetType.DISCO;
 import static info.rmapproject.core.model.impl.rdf4j.ORAdapter.uri2Rdf4jIri;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.findDerivativesfrom;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.findLineageProgenitor;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.getLineageMembers;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.getLineageMembersWithDates;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -62,6 +58,9 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
     @Autowired
     private ORMapEventMgr eventmgr;
 
+    @Autowired
+    private ORMapQueriesLineage queriesLineage;
+
     URI discoURI;
 
     URI lineageURI;
@@ -84,7 +83,7 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
 
         eventmgr.createEvent(event, ts);
 
-        assertEquals(lineageURI, findLineageProgenitor(discoURI, ts));
+        assertEquals(lineageURI, queriesLineage.findLineageProgenitor(discoURI, ts));
     }
 
     @Test
@@ -111,8 +110,8 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
         eventmgr.createEvent(update, ts);
 
         // Discovering the same lineage from both the new and old discos is expected
-        assertEquals(lineageURI, findLineageProgenitor(oldDiscoUri, ts));
-        assertEquals(lineageURI, findLineageProgenitor(discoURI, ts));
+        assertEquals(lineageURI, queriesLineage.findLineageProgenitor(oldDiscoUri, ts));
+        assertEquals(lineageURI, queriesLineage.findLineageProgenitor(discoURI, ts));
     }
 
     @Test
@@ -138,8 +137,8 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
         eventmgr.createEvent(creation, ts);
         eventmgr.createEvent(derivation, ts);
 
-        assertEquals(lineageURI, findLineageProgenitor(discoURI, ts));
-        assertNotEquals(lineageURI, findLineageProgenitor(oldDiscoUri, ts));
+        assertEquals(lineageURI, queriesLineage.findLineageProgenitor(discoURI, ts));
+        assertNotEquals(lineageURI, queriesLineage.findLineageProgenitor(oldDiscoUri, ts));
     }
 
     @Test
@@ -174,10 +173,10 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
         eventmgr.createEvent(derivation, ts);
         eventmgr.createEvent(update, ts);
 
-        assertEquals(lineageURI, findLineageProgenitor(discoURI, ts));
-        assertNotEquals(lineageURI, findLineageProgenitor(firstDiscoURI, ts));
-        assertNotEquals(lineageURI, findLineageProgenitor(secondDiscoUri, ts));
-        assertEquals(findLineageProgenitor(firstDiscoURI, ts), findLineageProgenitor(secondDiscoUri, ts));
+        assertEquals(lineageURI, queriesLineage.findLineageProgenitor(discoURI, ts));
+        assertNotEquals(lineageURI, queriesLineage.findLineageProgenitor(firstDiscoURI, ts));
+        assertNotEquals(lineageURI, queriesLineage.findLineageProgenitor(secondDiscoUri, ts));
+        assertEquals(queriesLineage.findLineageProgenitor(firstDiscoURI, ts), queriesLineage.findLineageProgenitor(secondDiscoUri, ts));
     }
 
     @Test
@@ -211,8 +210,8 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
         eventmgr.createEvent(derivation, ts);
         eventmgr.createEvent(update, ts);
 
-        final List<URI> members = getLineageMembers(firstDiscoURI, ts);
-        final Map<Date, URI> dates = getLineageMembersWithDates(firstDiscoURI, ts);
+        final List<URI> members = queriesLineage.getLineageMembers(firstDiscoURI, ts);
+        final Map<Date, URI> dates = queriesLineage.getLineageMembersWithDates(firstDiscoURI, ts);
 
         assertTrue(members.containsAll(asList(firstDiscoURI, secondDiscoUri)));
         assertTrue(dates.values().containsAll(members));
@@ -251,8 +250,8 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
         eventmgr.createEvent(derivation, ts);
         eventmgr.createEvent(update, ts);
 
-        final List<URI> members = getLineageMembers(firstDiscoURI, ts);
-        final Map<Date, URI> dates = getLineageMembersWithDates(firstDiscoURI, ts);
+        final List<URI> members = queriesLineage.getLineageMembers(firstDiscoURI, ts);
+        final Map<Date, URI> dates = queriesLineage.getLineageMembersWithDates(firstDiscoURI, ts);
 
         assertTrue(members.containsAll(asList(firstDiscoURI, secondDiscoUri)));
         assertTrue(dates.values().containsAll(members));
@@ -328,7 +327,7 @@ public class ORMapQueriesLineageTest extends CoreTestAbstract {
 
         asList(l1c, l2u, l3u, l1d, l3d, l1dd).forEach(e -> eventmgr.createEvent(e, ts));
 
-        final Set<URI> derivatives = findDerivativesfrom(l1, ts);
+        final Set<URI> derivatives = queriesLineage.findDerivativesfrom(l1, ts);
         assertEquals(2, derivatives.size());
         assertTrue(derivatives.containsAll(asList(d1, d3)));
 

@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static info.rmapproject.core.model.impl.rdf4j.ORAdapter.rMapIri2Rdf4jIri;
 import static info.rmapproject.core.model.impl.rdf4j.ORAdapter.uri2Rdf4jIri;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.findLineageProgenitor;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -76,6 +75,8 @@ public class ORMapDiSCOMgrTest extends ORMapMgrTest {
 	
 	@Autowired 
 	ORMapDiSCOMgr discomgr;
+	@Autowired 
+	ORMapQueriesLineage queriesLineage;
 	
 	/**
 	 * Test method for {@link info.rmapproject.core.rmapservice.impl.rdf4j.ORMapDiSCOMgr#readDiSCO(org.eclipse.rdf4j.model.IRI, boolean, Map, Map, ORMapEventMgr, info.rmapproject.core.rmapservice.impl.rdf4j.triplestore.Rdf4jTriplestore)}.
@@ -315,7 +316,7 @@ public class ORMapDiSCOMgrTest extends ORMapMgrTest {
 
         discomgr.createDiSCO(disco, reqEventDetails, triplestore);
 
-        assertEquals(disco.getId().getIri(), findLineageProgenitor(disco.getId().getIri(), triplestore));
+        assertEquals(disco.getId().getIri(), queriesLineage.findLineageProgenitor(disco.getId().getIri(), triplestore));
     }
 
 	/* Updates (by the same agent) should all have the same lineage progenitor */
@@ -342,11 +343,11 @@ public class ORMapDiSCOMgrTest extends ORMapMgrTest {
         discomgr.updateDiSCO(
                 rMapIri2Rdf4jIri(updatedDisco1.getId()), updatedDisco2, reqEventDetails, false, triplestore);
 
-        assertEquals(findLineageProgenitor(originalDisco.getId().getIri(), triplestore),
-                findLineageProgenitor(updatedDisco1.getId().getIri(), triplestore));
+        assertEquals(queriesLineage.findLineageProgenitor(originalDisco.getId().getIri(), triplestore),
+        		queriesLineage.findLineageProgenitor(updatedDisco1.getId().getIri(), triplestore));
         
-        assertEquals(findLineageProgenitor(updatedDisco1.getId().getIri(), triplestore),
-                findLineageProgenitor(updatedDisco2.getId().getIri(), triplestore));
+        assertEquals(queriesLineage.findLineageProgenitor(updatedDisco1.getId().getIri(), triplestore),
+        		queriesLineage.findLineageProgenitor(updatedDisco2.getId().getIri(), triplestore));
 
     }
     
@@ -367,10 +368,10 @@ public class ORMapDiSCOMgrTest extends ORMapMgrTest {
         discomgr.updateDiSCO(
                 rMapIri2Rdf4jIri(originalDisco.getId()), derivedDisco, reqEventDetails2, false, triplestore);
         
-        assertNotEquals(findLineageProgenitor(originalDisco.getId().getIri(), triplestore),
-                findLineageProgenitor(derivedDisco.getId().getIri(), triplestore));
+        assertNotEquals(queriesLineage.findLineageProgenitor(originalDisco.getId().getIri(), triplestore),
+        		queriesLineage.findLineageProgenitor(derivedDisco.getId().getIri(), triplestore));
         
-        assertEquals(derivedDisco.getId().getIri(), findLineageProgenitor(derivedDisco.getId().getIri(), triplestore));
+        assertEquals(derivedDisco.getId().getIri(), queriesLineage.findLineageProgenitor(derivedDisco.getId().getIri(), triplestore));
     }
 	
 	/**

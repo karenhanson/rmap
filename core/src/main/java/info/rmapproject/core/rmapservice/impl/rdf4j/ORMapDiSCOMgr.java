@@ -25,8 +25,6 @@ package info.rmapproject.core.rmapservice.impl.rdf4j;
 
 import static info.rmapproject.core.model.impl.rdf4j.ORAdapter.rdf4jIri2URI;
 import static info.rmapproject.core.model.impl.rdf4j.ORAdapter.uri2Rdf4jIri;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.findLineageProgenitor;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.getLineageMembers;
 
 import java.net.URI;
 import java.util.Date;
@@ -83,6 +81,9 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 	
 	/** Instance of the RMap Event Manager */
 	private ORMapEventMgr eventmgr;
+	
+	/** Instance of the RMap Queries Lineage */
+	private ORMapQueriesLineage queriesLineage;
 		
 	/**
 	 * Instantiates a new RMap DiSCO Manager
@@ -92,9 +93,10 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 	 * @throws RMapException the RMap exception
 	 */
 	@Autowired
-	public ORMapDiSCOMgr(ORMapAgentMgr agentmgr, ORMapEventMgr eventmgr) throws RMapException {
+	public ORMapDiSCOMgr(ORMapAgentMgr agentmgr, ORMapEventMgr eventmgr, ORMapQueriesLineage queriesLineage) throws RMapException {
 		this.agentmgr = agentmgr;
 		this.eventmgr = eventmgr;
+		this.queriesLineage = queriesLineage;
 	}
 	
 	/**
@@ -269,7 +271,7 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 		}		
 		agentmgr.validateRequestAgent(reqEventDetails, ts);
 		
-		final URI latestDiscoURI = getLineageMembers(findLineageProgenitor(rdf4jIri2URI(oldDiscoId), ts), ts)
+		final URI latestDiscoURI = queriesLineage.getLineageMembers(queriesLineage.findLineageProgenitor(rdf4jIri2URI(oldDiscoId), ts), ts)
 		        .stream().reduce((a, b) -> b).get();
 		//check that they are updating the latest version of the DiSCO otherwise throw exception
 		if (!latestDiscoURI.toString().equals(oldDiscoId.stringValue())){
@@ -296,7 +298,7 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 			if (creatorSameAsOrig){
 				ORMapEventInactivation iEvent = new ORMapEventInactivation(uri2Rdf4jIri(idSupplier.get()), reqEventDetails, RMapEventTargetType.DISCO);
 				iEvent.setInactivatedObjectId(ORAdapter.rdf4jIri2RMapIri(oldDiscoId));
-				iEvent.setLineageProgenitor(new RMapIri(findLineageProgenitor(rdf4jIri2URI(oldDiscoId), ts)));
+				iEvent.setLineageProgenitor(new RMapIri(queriesLineage.findLineageProgenitor(rdf4jIri2URI(oldDiscoId), ts)));
 				event = iEvent;
 			}
 			else {
@@ -316,7 +318,7 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 			}
 			if (creatorSameAsOrig){
 				ORMapEventUpdate uEvent = new ORMapEventUpdate(uri2Rdf4jIri(idSupplier.get()), reqEventDetails, RMapEventTargetType.DISCO, oldDiscoId, disco.getDiscoContext());
-				uEvent.setLineageProgenitor(new RMapIri(findLineageProgenitor(rdf4jIri2URI(oldDiscoId), ts)));
+				uEvent.setLineageProgenitor(new RMapIri(queriesLineage.findLineageProgenitor(rdf4jIri2URI(oldDiscoId), ts)));
 				event = uEvent;
 			}
 			else {
@@ -408,7 +410,7 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 			
 		// get the event started
 		ORMapEventTombstone event = new ORMapEventTombstone(uri2Rdf4jIri(idSupplier.get()), reqEventDetails, RMapEventTargetType.DISCO, discoId);
-		event.setLineageProgenitor(new RMapIri(findLineageProgenitor(rdf4jIri2URI(discoId), ts)));
+		event.setLineageProgenitor(new RMapIri(queriesLineage.findLineageProgenitor(rdf4jIri2URI(discoId), ts)));
 		
 		// set up triplestore and start transaction
 		boolean doCommitTransaction = false;
@@ -469,7 +471,7 @@ public class ORMapDiSCOMgr extends ORMapObjectMgr {
 		Set<Statement> stmts = disco.getAsModel();
 		// get the event started
 		ORMapEventDeletion event = new ORMapEventDeletion(uri2Rdf4jIri(idSupplier.get()), reqEventDetails, RMapEventTargetType.DISCO, discoId);
-		event.setLineageProgenitor(new RMapIri(findLineageProgenitor(rdf4jIri2URI(discoId), ts)));
+		event.setLineageProgenitor(new RMapIri(queriesLineage.findLineageProgenitor(rdf4jIri2URI(discoId), ts)));
 		
 		// set up triplestore and start transaction
 		boolean doCommitTransaction = false;

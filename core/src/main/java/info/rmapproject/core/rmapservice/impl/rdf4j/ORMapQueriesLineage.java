@@ -49,7 +49,7 @@ import info.rmapproject.core.rmapservice.impl.rdf4j.triplestore.Rdf4jTriplestore
  *
  * @author apb@jhu.edu
  */
-abstract class ORMapQueriesLineage {
+public class ORMapQueriesLineage {
 
     static final String BINDING_LINEAGE = "lineage";
 
@@ -91,28 +91,28 @@ abstract class ORMapQueriesLineage {
      * @param triplestore
      * @return URI of the progenitor, null if not present;
      */
-    static URI findLineageProgenitor(URI disco, Rdf4jTriplestore ts) {
+    public URI findLineageProgenitor(URI disco, Rdf4jTriplestore ts) {
         final RepositoryConnection c = ts.getConnection();
 
         final TupleQuery q = c.prepareTupleQuery(QUERY_LINEAGE_SEARCH);
 
+        URI found = null;
+        
         q.setBinding(BINDING_RESOURCE, c.getValueFactory().createIRI(disco.toString()));
 
-        try (TupleQueryResult result = q.evaluate()) {
+        TupleQueryResult result = q.evaluate();
+        if (result.hasNext()) {
+            found = URI.create(result.next().getBinding(BINDING_LINEAGE).getValue().toString());
             if (result.hasNext()) {
-                final URI found = URI.create(result.next().getBinding(BINDING_LINEAGE).getValue().toString());
-                if (result.hasNext()) {
-                    throw new RuntimeException(String.format("Two lineages found for resource <>: <> and <>",
-                            disco, found, result.next().getBinding(BINDING_LINEAGE).toString()));
-                }
-                return found;
+                throw new RuntimeException(String.format("Two lineages found for resource <>: <> and <>",
+                        disco, found, result.next().getBinding(BINDING_LINEAGE).toString()));
             }
         }
 
-        return null;
+        return found;
     }
 
-    static Set<URI> findDerivativesfrom(URI disco, Rdf4jTriplestore ts) {
+    public Set<URI> findDerivativesfrom(URI disco, Rdf4jTriplestore ts) {
 
         final Set<URI> derivatives = new HashSet<>();
         final RepositoryConnection c = ts.getConnection();
@@ -129,7 +129,7 @@ abstract class ORMapQueriesLineage {
         return derivatives;
     }
 
-    static Map<Date, URI> getLineageMembersWithDates(URI progenitor, Rdf4jTriplestore ts) {
+    public Map<Date, URI> getLineageMembersWithDates(URI progenitor, Rdf4jTriplestore ts) {
 
         final Map<Date, URI> members = new TreeMap<>();
 
@@ -153,7 +153,7 @@ abstract class ORMapQueriesLineage {
         return members;
     }
 
-    static List<URI> getLineageMembers(URI progenitor, Rdf4jTriplestore ts) {
+    public List<URI> getLineageMembers(URI progenitor, Rdf4jTriplestore ts) {
 
         return new ArrayList<>(getLineageMembersWithDates(progenitor, ts).values());
     }

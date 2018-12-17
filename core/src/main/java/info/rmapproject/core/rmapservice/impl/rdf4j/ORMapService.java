@@ -23,10 +23,6 @@
 package info.rmapproject.core.rmapservice.impl.rdf4j;
 
 import static info.rmapproject.core.model.impl.rdf4j.ORAdapter.uri2Rdf4jIri;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.findDerivativesfrom;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.findLineageProgenitor;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.getLineageMembers;
-import static info.rmapproject.core.rmapservice.impl.rdf4j.ORMapQueriesLineage.getLineageMembersWithDates;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -98,6 +94,9 @@ public class ORMapService implements RMapService {
 
 	/** Instance of the RMap Event Manager */
 	private ORMapEventMgr eventmgr;
+
+	/** Instance of the RMap Queries Lineage */
+	private ORMapQueriesLineage queriesLineage;
 	
 	/** An instance of the RDF4J triplestore for database changes.
 	 * It is declared in the ORMapService so that it can be passed to multiple functions
@@ -125,6 +124,7 @@ public class ORMapService implements RMapService {
 						ORMapAgentMgr agentmgr,
 						ORMapStatementMgr statementmgr,
 						ORMapEventMgr eventmgr,
+						ORMapQueriesLineage queriesLineage,
 						Rdf4jTriplestore triplestore,
 						RMapSearchParamsFactory paramsFactory,
 						IdService idService) {
@@ -133,6 +133,7 @@ public class ORMapService implements RMapService {
 		this.agentmgr = agentmgr;
 		this.statementmgr = statementmgr;
 		this.eventmgr = eventmgr;
+		this.queriesLineage = queriesLineage;
 		this.triplestore = triplestore;
 		this.paramsFactory = paramsFactory;
 		this.idService = idService;
@@ -537,13 +538,13 @@ public class ORMapService implements RMapService {
 			throw new RMapDefectiveArgumentException ("Null DiSCO id");
 		}
 		try {
-		    final URI lineage = findLineageProgenitor(discoID, triplestore);
+		    final URI lineage = queriesLineage.findLineageProgenitor(discoID, triplestore);
 		    final List<URI> discos = new ArrayList<>();
 		            
-		    discos.addAll(getLineageMembers(lineage, triplestore));
+		    discos.addAll(queriesLineage.getLineageMembers(lineage, triplestore));
 		    
-		    for (final URI derivative : findDerivativesfrom(lineage, triplestore)) {
-		        discos.addAll(getLineageMembers(derivative, triplestore));
+		    for (final URI derivative : queriesLineage.findDerivativesfrom(lineage, triplestore)) {
+		        discos.addAll(queriesLineage.getLineageMembers(derivative, triplestore));
 		    }
 		    
 		    return discos;
@@ -559,7 +560,7 @@ public class ORMapService implements RMapService {
 			throw new RMapDefectiveArgumentException ("Null DiSCO id");
 		}
 		try {
-			return getLineageMembers(findLineageProgenitor(discoID, triplestore), triplestore);
+			return queriesLineage.getLineageMembers(queriesLineage.findLineageProgenitor(discoID, triplestore), triplestore);
 		} finally {
 			closeConnection();
 		}
@@ -572,7 +573,7 @@ public class ORMapService implements RMapService {
 			throw new RMapDefectiveArgumentException ("Null DiSCO id");
 		}
 		try {
-			return getLineageMembersWithDates(findLineageProgenitor(discoID, triplestore), triplestore);
+			return queriesLineage.getLineageMembersWithDates(queriesLineage.findLineageProgenitor(discoID, triplestore), triplestore);
 		} finally {
 			closeConnection();
 		}
@@ -585,7 +586,7 @@ public class ORMapService implements RMapService {
 			throw new RMapDefectiveArgumentException ("Null DiSCO id");
 		}
 		try {
-            final List<URI> members = getLineageMembers(findLineageProgenitor(discoID, triplestore), triplestore);
+            final List<URI> members = queriesLineage.getLineageMembers(queriesLineage.findLineageProgenitor(discoID, triplestore), triplestore);
 			return members.get(members.size() - 1);
 		} finally {
 			closeConnection();
@@ -601,7 +602,7 @@ public class ORMapService implements RMapService {
 		}
 
 		try {
-		    final List<URI> members = getLineageMembers(findLineageProgenitor(discoID, triplestore), triplestore);
+		    final List<URI> members = queriesLineage.getLineageMembers(queriesLineage.findLineageProgenitor(discoID, triplestore), triplestore);
             final int i = members.indexOf(discoID);
             return i - 1 > 0 ? members.get(i - 1) : null;
 		} finally {
@@ -617,7 +618,7 @@ public class ORMapService implements RMapService {
 		}
 
 		try {
-		    final List<URI> members = getLineageMembers(findLineageProgenitor(discoID, triplestore), triplestore);
+		    final List<URI> members = queriesLineage.getLineageMembers(queriesLineage.findLineageProgenitor(discoID, triplestore), triplestore);
 		    final int i = members.indexOf(discoID);
 		    return i + 1 < members.size() ? members.get(i + 1) : null;
 		} finally {
@@ -1120,7 +1121,7 @@ public class ORMapService implements RMapService {
     @Override
     public URI getLineageProgenitor(URI discoUri) {
         try {
-            return findLineageProgenitor(discoUri, triplestore);
+            return queriesLineage.findLineageProgenitor(discoUri, triplestore);
         } finally {
             closeConnection();
         }
