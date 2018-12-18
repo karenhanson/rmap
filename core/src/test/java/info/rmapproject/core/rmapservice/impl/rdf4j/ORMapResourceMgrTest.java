@@ -42,7 +42,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import info.rmapproject.core.exception.RMapDefectiveArgumentException;
@@ -56,7 +55,6 @@ import info.rmapproject.core.model.request.RMapSearchParams;
 import info.rmapproject.core.model.request.RMapStatusFilter;
 import info.rmapproject.core.rmapservice.impl.rdf4j.ORMapDiSCOMgr;
 import info.rmapproject.core.rmapservice.impl.rdf4j.ORMapResourceMgr;
-import info.rmapproject.core.vocabulary.impl.rdf4j.RMAP;
 import info.rmapproject.testdata.service.TestConstants;
 import info.rmapproject.testdata.service.TestFile;
 
@@ -282,13 +280,13 @@ public class ORMapResourceMgrTest extends ORMapMgrTest {
 			context = rmapIdService.createId();
 			IRI resource02 = ORAdapter.getValueFactory().createIRI(TestConstants.TEST_DISCO_DOI);
 			
-			Statement s1 = ORAdapter.getValueFactory().createStatement(resource01, RDF.TYPE, RMAP.DISCO, resource01);
+			Statement s1 = ORAdapter.getValueFactory().createStatement(resource01, RDF_TYPE, RMAP_DISCO, resource01);
 			triplestore.addStatement(s1);
 			List<IRI> iris = resourcemgr.getResourceRdfTypes(resource01, resource01, triplestore);
 			assertNotNull(iris);
 			assertEquals(1,iris.size());
 			for (IRI iri:iris){
-				assertEquals(iri.stringValue(), RMAP.DISCO.stringValue());
+				assertEquals(iri, RMAP_DISCO);
 			}
 			iris = resourcemgr.getResourceRdfTypes(resource01, resource02, triplestore);
 			assertNull(iris);
